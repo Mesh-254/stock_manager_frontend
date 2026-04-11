@@ -11,6 +11,9 @@ import VerifyEmailPending from './pages/VerifyEmailPending';
 import VerifyEmail from './pages/VerifyEmail';
 import VerifyEmailSuccess from './pages/VerifyEmailSuccess';
 import VerifyEmailError from './pages/VerifyEmailError';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import PasswordResetSuccess from './pages/PasswordResetSuccess';
 
 const App: React.FC = () => {
   return (
@@ -24,6 +27,11 @@ const App: React.FC = () => {
           <Route path="/verify-email-pending" element={<VerifyEmailPending />} />
           <Route path="/verify-email-success" element={<VerifyEmailSuccess />} />
           <Route path="/verify-email-error" element={<VerifyEmailError />} />
+          
+          {/* Password Reset Routes - unauthenticated only */}
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
+          <Route path="/password-reset-success" element={<PasswordResetSuccess />} />
 
           {/* Protected Routes */}
           <Route
