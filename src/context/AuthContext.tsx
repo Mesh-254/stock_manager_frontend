@@ -13,7 +13,12 @@ export interface AuthContextType {
   user: User | null;
   loading: boolean;
   isAuthenticated: boolean;
-  loginUser: (email: string, password: string) => Promise<void>;
+  /**
+   * Authenticates user and returns redirect URL from backend.
+   * Returns: redirect_url string if backend provides it, null as fallback
+   * Stores tokens and user data in state and localStorage on success
+   */
+  loginUser: (email: string, password: string) => Promise<string | null>;
   logoutUser: () => Promise<void>;
   registerUser: (
     full_name: string,
@@ -51,22 +56,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setLoading(false);
   }, []);
 
-  const loginUser = useCallback(async (email: string, password: string) => {
+  const loginUser = useCallback(async (email: string, password: string): Promise<string | null> => {
     try {
       setError(null);
       setLoading(true);
 
       const response = await authAPI.login({ email, password });
 
-      // Store tokens
+      // Store JWT tokens in localStorage for API requests
       localStorage.setItem('access_token', response.access);
       localStorage.setItem('refresh_token', response.refresh);
 
-      // Store user data
+      // Store user data in localStorage and state for UI context
       const userData = response.user;
       localStorage.setItem('user', JSON.stringify(userData));
-
       setUser(userData);
+
+      // Return redirect_url from backend
+      // Backend determines where user should go based on their role:
+      // - is_staff=True (SuperAdmin, ShopAdmin) → /admin/
+      // - is_staff=False (Cashier, etc.) → /dashboard
+      // Falls back to null if not provided, allowing Login.tsx to handle fallback logic
+      return response.redirect_url || null;
     } catch (err: any) {
       const errorMessage =
         err.response?.data?.detail ||
