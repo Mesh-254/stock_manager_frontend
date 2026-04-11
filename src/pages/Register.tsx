@@ -144,7 +144,7 @@ const Register: React.FC = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl md:text-5xl font-playfair font-bold text-white mb-2">
-            ShopManager
+            Kanainvestments
           </h1>
           <p className="text-slate-400 font-dmsan text-sm md:text-base">
             Create your account and start managing
