@@ -24,6 +24,7 @@ interface LoginResponse {
     role: string;
     shop_id: string | null;
   };
+  redirect_url: string; // Backend returns redirect URL based on role
 }
 
 interface RegisterResponse {
@@ -47,6 +48,7 @@ const axiosInstance: AxiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,   // ← THIS IS CRITICAL for Django session cookies
 });
 
 // Request interceptor to attach JWT token
@@ -141,6 +143,15 @@ export const authAPI = {
 
   checkEmail: (email: string): Promise<{ exists: boolean; is_active: boolean }> => {
     return axiosInstance.post('/check-email/', { email }).then((res) => res.data);
+  },
+
+  // Password reset endpoints
+  requestPasswordReset: (email: string): Promise<{ message: string }> => {
+    return axiosInstance.post('/password-reset/', { email }).then((res) => res.data);
+  },
+
+  confirmPasswordReset: (token: string, password: string): Promise<{ message: string }> => {
+    return axiosInstance.post(`/password-reset-confirm/${token}/`, { password }).then((res) => res.data);
   },
 };
 
