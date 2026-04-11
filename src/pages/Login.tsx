@@ -10,31 +10,77 @@ const Login: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const navigate = useNavigate();
-  const { loginUser } = useAuth();
+  const { loginUser, user } = useAuth();
+
+  
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+
+  /**
+   * Handles role-based redirect after successful login.
+   * - SuperAdmin, ShopAdmin, or any is_staff=True user → Django Unfold admin
+   * - Cashier and other roles → React SPA dashboard
+   * 
+   * This is the fallback if backend doesn't provide redirect_url,
+   * but ensures correct routing regardless of backend response.
+   */
+  const handleSuccessfulLogin = (userData: any) => {
+    if (!userData) return;
+
+    const { role, is_staff } = userData;
+
+    // Staff users (SuperAdmin, ShopAdmin) → Django admin dashboard
+    if (is_staff || role === 'SuperAdmin' || role === 'ShopAdmin') {
+      window.location.href = `${API_BASE_URL}/admin/`;
+      return;
+    }
+
+    // Non-staff users (Cashier, etc.) → React SPA dashboard
+    // navigate('/dashboard');
+  };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setLocalError('');
-    setIsSubmitting(true);
+  e.preventDefault();
+  setLocalError('');
+  setIsSubmitting(true);
 
-    try {
-      await loginUser(email, password);
+  try {
+    const redirectUrl = await loginUser(email, password);   // from backend
 
-      if (rememberMe) {
-        localStorage.setItem('rememberEmail', email);
-      } else {
-        localStorage.removeItem('rememberEmail');
-      }
-
-      navigate('/dashboard');
-    } catch (err: any) {
-      setLocalError(
-        err.message || 'Login failed. Please check your credentials.'
-      );
-    } finally {
-      setIsSubmitting(false);
+    // Save "Remember Me"
+    if (rememberMe) {
+      localStorage.setItem('rememberEmail', email);
+    } else {
+      localStorage.removeItem('rememberEmail');
     }
-  };
+
+    // ==================== FIXED REDIRECT LOGIC ====================
+    if (redirectUrl) {
+      if (redirectUrl === '/admin/' || redirectUrl.includes('admin')) {
+        // SuperAdmin / ShopAdmin / is_staff → FULL page load to Django Unfold admin
+        // This is the line you asked me to keep working
+        window.location.href = `${API_BASE_URL}/admin/`;
+        return;
+      } else {
+        // Cashier etc. → React SPA route
+        navigate(redirectUrl);
+        return;
+      }
+    }
+
+    // Fallback (safety net - should almost never be reached)
+    if (user) {
+      handleSuccessfulLogin(user);
+    } else {
+      navigate('/dashboard');
+    }
+  } catch (err: any) {
+    setLocalError(
+      err.message || 'Login failed. Please check your credentials.'
+    );
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   React.useEffect(() => {
     const savedEmail = localStorage.getItem('rememberEmail');
@@ -114,21 +160,29 @@ const Login: React.FC = () => {
               />
             </div>
 
-            {/* Remember Me */}
-            <div className="flex items-center">
-              <input
-                id="rememberMe"
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-4 h-4 rounded border-navy-700 bg-navy-800/50 text-amber-500 cursor-pointer"
-              />
-              <label
-                htmlFor="rememberMe"
-                className="ml-2 text-sm text-slate-400 font-dmsan cursor-pointer hover:text-white transition-colors"
+            {/* Remember Me & Forgot Password */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <input
+                  id="rememberMe"
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 rounded border-navy-700 bg-navy-800/50 text-amber-500 cursor-pointer"
+                />
+                <label
+                  htmlFor="rememberMe"
+                  className="ml-2 text-sm text-slate-400 font-dmsan cursor-pointer hover:text-white transition-colors"
+                >
+                  Remember me
+                </label>
+              </div>
+              <Link
+                to="/forgot-password"
+                className="text-sm text-amber-400 font-dmsan hover:text-amber-300 transition-colors"
               >
-                Remember me
-              </label>
+                Forgot Password?
+              </Link>
             </div>
 
             {/* Submit Button */}
