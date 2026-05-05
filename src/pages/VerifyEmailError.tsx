@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
 import { authAPI } from '../api/auth';
+import { Link } from 'react-router-dom';
 
 const VerifyEmailError: React.FC = () => {
-  const [searchParams] = useSearchParams();
   const [email, setEmail] = useState('');
   const [isResending, setIsResending] = useState(false);
   const [resendMessage, setResendMessage] = useState('');
