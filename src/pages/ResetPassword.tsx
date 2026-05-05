@@ -26,7 +26,7 @@ const ResetPassword: React.FC = () => {
 
   // Redirect authenticated users away from password reset page
   if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   // Redirect if no token
